@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, Calendar, MessageCircle, Heart } from "lucide-react";
+import { ArrowRight, Bot, MessageCircle, Sparkles, Target } from "lucide-react";
 import { TOTAL_QUESTIONS, BLOCKS } from "@/lib/questions";
 
 export default function Home() {
@@ -7,24 +7,26 @@ export default function Home() {
     <main className="min-h-screen">
       <section className="max-w-3xl mx-auto px-6 pt-20 pb-16 md:pt-32">
         <p className="text-xs uppercase tracking-[0.28em] text-[var(--sage-deep)] mb-6 font-medium">
-          PropelKap × Gina Brows
+          PropelKap OS · Diagnóstico
         </p>
         <h1 className="text-5xl md:text-6xl leading-[1.05] mb-6 font-semibold">
-          Diseñemos juntas el ecosistema digital de{" "}
-          <span className="text-[var(--primary-dark)]">Gina Brows</span>.
+          Configuremos juntos el ecosistema de{" "}
+          <span className="text-[var(--primary-dark)]">tu negocio</span>.
         </h1>
         <p className="text-lg text-[var(--muted-foreground)] leading-relaxed max-w-2xl mb-10">
-          Este cuestionario es la base de tu nuevo CRM, tus automatizaciones de
-          WhatsApp, tu marketing por correo y todo lo que va a reemplazar a
-          AgendaPro. Te tomará entre <strong className="text-[var(--foreground)]">15 y 25 minutos</strong>. Si te
-          interrumpen, regresas y sigues donde lo dejaste — todo se guarda solo.
+          Este cuestionario es la base de tu CRM personalizado, tu agente IA
+          que contesta WhatsApp por ti, tus plantillas de venta y todo el
+          ecosistema que vas a recibir. Te tomará entre{" "}
+          <strong className="text-[var(--foreground)]">7 y 10 minutos</strong>.
+          Si te interrumpen, regresas y sigues donde lo dejaste — todo se
+          guarda solo.
         </p>
 
         <Link
           href="/cuestionario"
           className="inline-flex items-center gap-2 bg-[var(--secondary)] text-[var(--foreground)] px-7 py-3.5 rounded-full font-medium hover:bg-[var(--primary)] transition-colors shadow-sm"
         >
-          Empezar el cuestionario
+          Empezar el diagnóstico
           <ArrowRight className="w-4 h-4" />
         </Link>
 
@@ -36,35 +38,35 @@ export default function Home() {
       <section className="bg-[var(--card)] border-y border-[var(--border)]">
         <div className="max-w-3xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-10">
           <div>
-            <h2 className="text-2xl mb-3 font-semibold">Lo que vamos a construir contigo</h2>
+            <h2 className="text-2xl mb-3 font-semibold">Lo que vamos a construirte</h2>
             <p className="text-[var(--muted-foreground)] leading-relaxed">
-              Con tus respuestas armamos una propuesta concreta de cómo
-              migrar de AgendaPro a un sistema 100% tuyo, impulsado por IA, que
-              te ahorra horas de WhatsApp cada semana y trae clientes de regreso
-              sin que tengas que recordarlo tú.
+              Con tus respuestas armamos una propuesta a tu medida y, una vez
+              que confirmes, configuramos automáticamente tu CRM personalizado
+              con tu agente IA entrenado para sonar como tú, tus plantillas y
+              tu pipeline. Sin que tengas que volver a explicarnos nada.
             </p>
           </div>
           <ul className="space-y-4">
-            <Item icon={<Calendar className="w-4 h-4" />}>
-              Tu CRM con la agenda, los contactos y el historial de cada clienta
+            <Item icon={<Bot className="w-4 h-4" />}>
+              Agente IA en WhatsApp que contesta y califica leads como tú
             </Item>
             <Item icon={<MessageCircle className="w-4 h-4" />}>
-              Recordatorios de cita y de retoque automáticos por WhatsApp
+              Plantillas y scripts personalizados a tu especialidad
             </Item>
-            <Item icon={<Heart className="w-4 h-4" />}>
-              Felicitaciones de cumpleaños y reactivación de clientas dormidas
+            <Item icon={<Target className="w-4 h-4" />}>
+              CRM con tu pipeline y reportes mensuales automáticos
             </Item>
             <Item icon={<Sparkles className="w-4 h-4" />}>
-              Email marketing y reportes mensuales que te llegan solos
+              Llamadas de voz IA con tu voz clonada (opcional)
             </Item>
           </ul>
         </div>
       </section>
 
       <footer className="max-w-3xl mx-auto px-6 py-10 text-xs text-[var(--muted-foreground)] flex items-center justify-between">
-        <span>© {new Date().getFullYear()} PropelKap</span>
-        <a href="mailto:jpbriones@propelkap.com" className="hover:text-[var(--foreground)]">
-          jpbriones@propelkap.com
+        <span>© {new Date().getFullYear()} PropelKap OS</span>
+        <a href="mailto:jp@propelkap.com" className="hover:text-[var(--foreground)]">
+          jp@propelkap.com
         </a>
       </footer>
     </main>

@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PropelKap OS · Intake / Diagnóstico
 
-## Getting Started
+Form único de diagnóstico para nuevos prospectos PropelKap OS. Captura
+toda la información necesaria para:
 
-First, run the development server:
+1. Calificar el lead (scoring + bot persona)
+2. Generar la propuesta auto-personalizada (Fase 7)
+3. Provisionar el CRM del cliente cuando paga (Fase 9)
+4. Configurar el system prompt del agente IA (Bloques 5-6)
+5. Generar plantillas Día 3 + scripts Día 4 (Onboarding)
+6. Setup pipeline default (Bloque 8)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Filosofía:** el cliente llena UNA vez. Después no le preguntamos
+nada hasta el Día 7 sesión 1:1.
+
+## Stack
+
+- Next.js 16 (App Router) + React 19
+- Tailwind CSS + shadcn-style primitives
+- Supabase (insert en `contacts` cuenta PropelKap)
+- Resend (notificación a JP cuando llega lead)
+- React Hook Form + zod validation
+- Auto-save localStorage (cliente puede pausar y reanudar)
+
+## Estructura
+
+```
+app/
+  page.tsx              ← Landing del intake
+  cuestionario/
+    page.tsx            ← Wrapper Next.js
+    IntakeForm.tsx      ← Form multi-step con autoguardado
+  api/
+    submit/route.ts     ← Submit handler → Supabase + Resend
+lib/
+  questions.ts          ← 9 bloques de preguntas (FUENTE DE VERDAD)
+  supabase.ts           ← Cliente Supabase
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Bloques del cuestionario
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Quién eres (identidad)
+2. Tu negocio actual
+3. Tu dolor real
+4. Capacidad e intención
+5. Agente IA · cómo debe SONAR como tú
+6. Agente IA · cómo debe NEGOCIAR
+7. Tu producto/servicio
+8. Tu pipeline de venta
+9. Cómo nos conociste
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
+URL productiva: `diagnostico.propelkap.com` (CNAME → Vercel)
 
-To learn more about Next.js, take a look at the following resources:
+## Setup local
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cp .env.example .env.local
+# editar SUPABASE_URL, SUPABASE_ANON_KEY, RESEND_API_KEY
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Migración a producción
 
-## Deploy on Vercel
+1. Crear proyecto Vercel `propelkap-os-intake` (team `jpbriones-3057s-projects`)
+2. Conectar repo GitHub
+3. Setear env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `RESEND_API_KEY`
+4. Deploy
+5. DNS CNAME `diagnostico.propelkap.com` → Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Origen
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Repo clonado de `gina-brows-intake` 30-abr-2026. Mismo patrón, distinto
+cuestionario y branding.
