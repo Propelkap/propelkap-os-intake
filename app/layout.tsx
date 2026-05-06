@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import MetaPixel from "./MetaPixel";
 
 const nohemi = localFont({
   variable: "--font-nohemi",
@@ -15,12 +16,13 @@ const nohemi = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Gina Brows · Cuestionario de descubrimiento",
+  title: "PropelKap OS · Cuestionario de descubrimiento",
   description:
-    "Diseñamos contigo el ecosistema digital de Gina Brows. Cuéntanos cómo trabajas hoy para construir tu CRM, automatizaciones y estrategia de marca.",
+    "Diseñamos contigo el ecosistema digital de tu negocio. Cuéntanos cómo trabajas hoy para construir tu CRM personalizado, agente IA en WhatsApp, landing y automatizaciones en 7 días.",
   openGraph: {
-    title: "Gina Brows · Cuestionario de descubrimiento",
-    description: "Diseñamos contigo el ecosistema digital de Gina Brows.",
+    title: "PropelKap OS · Cuestionario de descubrimiento",
+    description:
+      "CRM + Agente IA + Landing + Onboarding 7 días para asesores financieros mexicanos.",
     type: "website",
   },
 };
@@ -31,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${nohemi.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <MetaPixel />
         {children}
       </body>
     </html>

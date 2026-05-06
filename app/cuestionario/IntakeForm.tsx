@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Check, Save } from "lucide-react";
 import { BLOCKS, TOTAL_QUESTIONS, type Question } from "@/lib/questions";
+import { trackMetaLead } from "../MetaPixel";
 
 type FormValues = Record<string, string | string[]>;
 
@@ -110,6 +111,7 @@ export default function IntakeForm() {
         throw new Error(j.error || "No pudimos guardar tus respuestas. Intenta de nuevo.");
       }
       setSubmitted(true);
+      trackMetaLead({ content_name: "PropelKap OS Intake", content_category: "saas-b2b" });
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
     } catch (e) {
       setSubmitError((e as Error).message);
@@ -132,14 +134,14 @@ export default function IntakeForm() {
         <div className="w-14 h-14 rounded-full bg-[var(--sage-light)] mx-auto mb-6 flex items-center justify-center">
           <Check className="w-7 h-7 text-[var(--sage-deep)]" />
         </div>
-        <h1 className="text-3xl mb-3 font-semibold">¡Listo, Gina!</h1>
+        <h1 className="text-3xl mb-3 font-semibold">¡Listo!</h1>
         <p className="text-[var(--muted-foreground)] leading-relaxed">
-          Recibimos tus respuestas. En las próximas <strong className="text-[var(--foreground)]">48 horas</strong> te
-          mando una propuesta concreta con el ecosistema digital de Gina Brows:
-          CRM, automatizaciones, marketing y un calendario de implementación.
+          Recibimos tus respuestas. En las próximas <strong className="text-[var(--foreground)]">24-48 horas</strong> te
+          mando un diagnóstico personalizado por WhatsApp con la propuesta concreta para tu negocio:
+          CRM personalizado, agente IA, landing y plan de implementación en 7 días.
         </p>
         <p className="mt-6 text-sm text-[var(--muted-foreground)]">
-          — JP, PropelKap
+          — Jorge Pérez, PropelKap
         </p>
       </div>
     );
