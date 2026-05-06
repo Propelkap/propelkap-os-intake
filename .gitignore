@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Credentials archive (added by reorg 2026-05-05)
+_credentials*
