@@ -265,7 +265,11 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase insert pk_leads error:", error);
-      // Si fue error de UNIQUE (duplicado), recuperar lead existente
+      // Si fue error de UNIQUE (duplicado), recuperar lead existente Y
+      // ACTUALIZAR sus campos con los datos REALES del cuestionario que el
+      // lead acaba de enviar. Esto cubre el caso de pk_lead "shell" creado
+      // por blast/backfill que después llena el form de intake completo —
+      // sin este UPDATE los datos quedaban null y el scoring caía a frio/0.
       if (error.code === "23505") {
         const { data: existing } = await supabase
           .from("pk_leads")
@@ -276,6 +280,46 @@ export async function POST(req: Request) {
         if (existing?.id) {
           leadId = existing.id;
           leadInserted = false;
+          // UPDATE de los campos del cuestionario sobre el row existente.
+          // Re-aplicamos exactamente lo que se hubiera insertado, salvo que
+          // no tocamos created_at, utm_*, ip, user_agent (preservamos del
+          // contexto original de adquisición). El payload se reescribe
+          // porque ahora tenemos las respuestas reales.
+          const { error: updateErr } = await supabase
+            .from("pk_leads")
+            .update({
+              // Identidad
+              nombre_completo: str("nombre_completo"),
+              ciudad: str("ciudad"),
+              especialidad: str("especialidad"),
+              cedula_vigente: str("cedula_vigente"),
+              // Negocio
+              anios_operando: num("anios_operando"),
+              clientes_activos: str("clientes_activos"),
+              cierres_mes: str("cierres_mes"),
+              tamanio_equipo: str("tamanio_equipo"),
+              software_actual: arr("software_actual"),
+              canales_captacion: arr("canales_captacion"),
+              // Dolor
+              tareas_que_roban_tiempo: arr("tareas_que_roban_tiempo"),
+              horas_operativo_semana: str("horas_operativo_semana"),
+              varita_magica: str("varita_magica"),
+              frustracion_clientes: str("frustracion_clientes"),
+              // Capacidad
+              presupuesto_herramientas: str("presupuesto_herramientas"),
+              cuando_arrancas: str("cuando_arrancas"),
+              decision_solo_o_equipo: str("decision_solo_o_equipo"),
+              // Producto
+              servicios_principales: arr("servicios_principales"),
+              ticket_promedio: str("ticket_promedio"),
+              tiempo_cierre: str("tiempo_cierre"),
+              // Payload nuevo (con respuestas reales)
+              payload: { ...values, utm, referrer, prior_shell: true },
+            })
+            .eq("id", existing.id);
+          if (updateErr) {
+            console.error("Supabase update pk_leads (duplicate path) error:", updateErr);
+          }
         }
       }
     } else {
