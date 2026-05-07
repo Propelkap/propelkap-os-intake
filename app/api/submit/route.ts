@@ -112,6 +112,50 @@ function clientThankYouHtml(owner: string): string {
 }
 
 // ────────────────────────────────────────────────────────────────
+// Normalización de teléfono MX para WhatsApp
+// ────────────────────────────────────────────────────────────────
+// Móviles MX requieren +521 (no +52) para que Meta entregue mensajes WA.
+// Sin el "1" después del +52, todos los templates rebotan con err 63049.
+//
+// Reglas:
+// - +52 (10 dígitos)        → +521 + 10 dígitos
+// - +521 (10 dígitos)       → ya correcto, intacto
+// - 10 dígitos directos MX  → +521 + 10 dígitos
+// - cualquier otro país (+1, +34, +57, etc.) → respetar tal cual
+// ────────────────────────────────────────────────────────────────
+function normalizeMxMobile(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  if (!trimmed) return null;
+
+  // Quitar todo excepto dígitos y +
+  const cleaned = trimmed.replace(/[^\d+]/g, "");
+
+  // Caso 1: ya tiene +521 + 10 dígitos
+  if (/^\+521\d{10}$/.test(cleaned)) return cleaned;
+
+  // Caso 2: +52 + 10 dígitos (sin el 1) → agregar 1
+  if (/^\+52\d{10}$/.test(cleaned)) {
+    return `+521${cleaned.slice(3)}`;
+  }
+
+  // Caso 3: 521 + 10 dígitos sin +
+  if (/^521\d{10}$/.test(cleaned)) return `+${cleaned}`;
+
+  // Caso 4: 52 + 10 dígitos sin + ni 1
+  if (/^52\d{10}$/.test(cleaned)) return `+521${cleaned.slice(2)}`;
+
+  // Caso 5: 10 dígitos directos (sin código) → asumir MX móvil
+  if (/^\d{10}$/.test(cleaned)) return `+521${cleaned}`;
+
+  // Caso 6: otro país (ej. +1, +34, +57) → respetar
+  if (cleaned.startsWith("+")) return cleaned;
+
+  // Fallback: prefix + sin tocar
+  return `+${cleaned}`;
+}
+
+// ────────────────────────────────────────────────────────────────
 // POST handler
 // ────────────────────────────────────────────────────────────────
 
@@ -174,7 +218,7 @@ export async function POST(req: Request) {
         // Identidad
         nombre_completo: str("nombre_completo"),
         email: str("email"),
-        whatsapp: str("whatsapp"),
+        whatsapp: normalizeMxMobile(str("whatsapp")),
         ciudad: str("ciudad"),
         especialidad: str("especialidad"),
         cedula_vigente: str("cedula_vigente"),
@@ -226,7 +270,7 @@ export async function POST(req: Request) {
         const { data: existing } = await supabase
           .from("pk_leads")
           .select("id")
-          .or(`email.eq.${str("email")},whatsapp.eq.${str("whatsapp")}`)
+          .or(`email.eq.${str("email")},whatsapp.eq.${normalizeMxMobile(str("whatsapp"))}`)
           .limit(1)
           .single();
         if (existing?.id) {
