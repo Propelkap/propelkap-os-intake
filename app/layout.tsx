@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import MetaPixel from "./MetaPixel";
+import TikTokPixel from "./TikTokPixel";
 
 const nohemi = localFont({
   variable: "--font-nohemi",
@@ -34,6 +35,7 @@ export default function RootLayout({
     <html lang="es" className={`${nohemi.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
         <MetaPixel />
+        <TikTokPixel />
         {children}
       </body>
     </html>
