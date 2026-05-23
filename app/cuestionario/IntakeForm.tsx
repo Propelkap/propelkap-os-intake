@@ -112,6 +112,18 @@ export default function IntakeForm() {
       }
       setSubmitted(true);
       trackMetaLead({ content_name: "PropelKap OS Intake", content_category: "saas-b2b" });
+      // TikTok pixel — dispara FORM event para optimization de campañas WEB_CONVERSIONS
+      if (typeof window !== "undefined") {
+        const w = window as unknown as { ttq?: { track: (event: string, data: Record<string, unknown>) => void } };
+        if (w.ttq) {
+          w.ttq.track("SubmitForm", {
+            content_name: "PropelKap OS Intake",
+            content_category: "saas-b2b",
+            value: 0,
+            currency: "MXN",
+          });
+        }
+      }
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
     } catch (e) {
       setSubmitError((e as Error).message);
