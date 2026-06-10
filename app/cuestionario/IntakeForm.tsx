@@ -39,6 +39,8 @@ export default function IntakeForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [utm, setUtm] = useState<Record<string, string>>({});
+  const [referrer, setReferrer] = useState<string>("");
 
   useEffect(() => {
     try {
@@ -47,8 +49,31 @@ export default function IntakeForm() {
         const parsed = JSON.parse(raw);
         if (parsed.values) setValues(parsed.values);
         if (typeof parsed.step === "number") setStep(parsed.step);
+        if (parsed.utm) setUtm(parsed.utm);
+        if (parsed.referrer) setReferrer(parsed.referrer);
       }
     } catch {}
+
+    // Captura UTM params + referrer del navegador (primera visita)
+    if (typeof window !== "undefined") {
+      const search = new URLSearchParams(window.location.search);
+      const captured: Record<string, string> = {};
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((key) => {
+        const v = search.get(key);
+        if (v) captured[key] = v;
+      });
+      if (Object.keys(captured).length > 0) {
+        // Merge con UTMs ya capturados — primera fuente gana (no sobreescribe)
+        setUtm((prev) => {
+          const merged = { ...captured, ...prev };
+          return Object.keys(prev).length > 0 ? prev : merged;
+        });
+      }
+      if (document.referrer && !referrer) {
+        setReferrer(document.referrer);
+      }
+    }
+
     setHydrated(true);
   }, []);
 
@@ -57,11 +82,11 @@ export default function IntakeForm() {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ values, step, updatedAt: Date.now() })
+        JSON.stringify({ values, step, utm, referrer, updatedAt: Date.now() })
       );
       setSavedAt(new Date());
     } catch {}
-  }, [values, step, hydrated]);
+  }, [values, step, utm, referrer, hydrated]);
 
   const totalSteps = BLOCKS.length;
   const block = BLOCKS[step];
@@ -104,7 +129,7 @@ export default function IntakeForm() {
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values }),
+        body: JSON.stringify({ values, utm, referrer }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
