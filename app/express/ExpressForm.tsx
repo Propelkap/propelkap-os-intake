@@ -9,10 +9,12 @@ type FormValues = {
   whatsapp: string;
   ciudad: string;
   especialidad: string;
+  clientes_activos: string;
+  cuando_arrancas: string;
   varita_magica: string;
 };
 
-const STORAGE_KEY = "propelkap-express-v1";
+const STORAGE_KEY = "propelkap-express-v2";
 
 const ESPECIALIDADES = [
   "Asesor de pensiones / Modalidad 40",
@@ -21,7 +23,32 @@ const ESPECIALIDADES = [
   "Broker / asesor financiero",
   "Contador independiente",
   "Otro",
+  "Busco ayuda con mi propia pensión (no soy asesor)",
 ];
+
+// Opciones idénticas a las del cuestionario completo — el motor de scoring
+// (intake-scoring) matchea por string exacto; cualquier variación puntúa 0.
+const CLIENTES_ACTIVOS = [
+  "Aún no tengo clientes",
+  "Menos de 10",
+  "10-30",
+  "30-100",
+  "100-300",
+  "Más de 300",
+];
+
+const CUANDO_ARRANCAS = [
+  "Esta semana",
+  "Este mes",
+  "Próximos 3 meses",
+  "Solo estoy explorando",
+];
+
+// Gate anti-basura: estos valores identifican a quien NO es cliente potencial
+// (consumidores buscando ayuda con su pensión, curiosos sin negocio). No se
+// insertan al CRM ni disparan el pixel Lead — así Meta/TikTok no aprenden de ellos.
+const DISQUALIFY_ESPECIALIDAD = "Busco ayuda con mi propia pensión (no soy asesor)";
+const DISQUALIFY_CLIENTES = "Aún no tengo clientes";
 
 export default function ExpressForm() {
   const [v, setV] = useState<FormValues>({
@@ -30,10 +57,13 @@ export default function ExpressForm() {
     whatsapp: "",
     ciudad: "",
     especialidad: "",
+    clientes_activos: "",
+    cuando_arrancas: "",
     varita_magica: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [disqualified, setDisqualified] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [utm, setUtm] = useState<Record<string, string>>({});
   const [referrer, setReferrer] = useState("");
@@ -77,21 +107,36 @@ export default function ExpressForm() {
     v.whatsapp.trim() &&
     v.ciudad.trim() &&
     v.especialidad.trim() &&
+    v.clientes_activos.trim() &&
+    v.cuando_arrancas.trim() &&
     !submitting;
+
+  const isDisqualified =
+    v.especialidad === DISQUALIFY_ESPECIALIDAD || v.clientes_activos === DISQUALIFY_CLIENTES;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
+
+    // Gate: consumidores / sin negocio → descarte amable SIN insertar al CRM
+    // y SIN disparar el pixel Lead (para que el algoritmo de ads no aprenda de ellos)
+    if (isDisqualified) {
+      setDisqualified(true);
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
-      // No agregamos funnel_path/source en values — el endpoint tiene constraints
-      // que no aceptan strings arbitrarios. Identificamos el origen via utm_campaign
-      // o el path /express (queda en referrer).
+      // form_variant NO es columna de pk_leads (no rompe el insert) — viaja en
+      // payload jsonb y el motor de scoring lo usa para normalizar el score.
+      // No usar funnel_path/source: son columnas con constraints.
+      const values = { ...v, form_variant: "express" };
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ values: v, utm, referrer }),
+        body: JSON.stringify({ values, utm, referrer }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -126,6 +171,26 @@ export default function ExpressForm() {
 
   function update<K extends keyof FormValues>(key: K, val: FormValues[K]) {
     setV((prev) => ({ ...prev, [key]: val }));
+  }
+
+  if (disqualified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)] px-6">
+        <div className="max-w-xl w-full text-center py-20">
+          <h1 className="text-2xl mb-4 font-semibold text-[var(--foreground,#0A2540)]">
+            Gracias por tu interés, {v.nombre_completo.split(" ")[0] || "amigo"} 🙌
+          </h1>
+          <p className="text-[var(--muted-foreground,#5A6573)] leading-relaxed mb-6">
+            PropelKap OS es una herramienta para <strong>asesores y agentes financieros</strong> que
+            ya atienden clientes — no es un servicio de asesoría de pensiones para el público.
+          </p>
+          <p className="text-[var(--muted-foreground,#5A6573)] leading-relaxed">
+            Si lo que buscas es orientación sobre <strong>tu propia pensión IMSS</strong>, te
+            recomendamos acudir a tu AFORE o a un asesor certificado en tu ciudad. ¡Mucho éxito!
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (submitted) {
@@ -247,6 +312,44 @@ export default function ExpressForm() {
               {ESPECIALIDADES.map((e) => (
                 <option key={e} value={e}>
                   {e}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground,#0A2540)] mb-2">
+              ¿Cuántos clientes activos manejas? *
+            </label>
+            <select
+              required
+              value={v.clientes_activos}
+              onChange={(e) => update("clientes_activos", e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-[var(--border,#E5E2DA)] bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-dark,#0A2540)]"
+            >
+              <option value="">Selecciona…</option>
+              {CLIENTES_ACTIVOS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground,#0A2540)] mb-2">
+              ¿Cuándo te gustaría empezar a automatizar? *
+            </label>
+            <select
+              required
+              value={v.cuando_arrancas}
+              onChange={(e) => update("cuando_arrancas", e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-[var(--border,#E5E2DA)] bg-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-dark,#0A2540)]"
+            >
+              <option value="">Selecciona…</option>
+              {CUANDO_ARRANCAS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
